@@ -87,7 +87,7 @@ class ArchMusic(Client):
         try:
             await self.send_video(
                 chat_id=config.LOG_GROUP_ID,
-                video="https://telegra.ph/file/802dbdcdd7e5653ef135a.mp4",  # ✅ Şık müzik dalgası videosu
+                video="https://telegra.ph/file/36221d40afde82941ffff.mp4",  # ✅ Şık müzik dalgası videosu
                 caption=(
                     "✅ **AMED Bot Aktif!**\n\n"
                     "🎵 Müzik sistemleri başarıyla başlatıldı.\n"
