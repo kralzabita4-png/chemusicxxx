@@ -83,20 +83,20 @@ class ArchMusic(Client):
             sys.exit()
 
     async def _send_startup_notice(self):
-        """Log grubuna botun aktif olduğunu bildirir."""
+        """Log grubuna botun aktif olduğunu bildirir (video olmadan)."""
         try:
-            await self.send_video(
+            await self.send_message(
                 chat_id=config.LOG_GROUP_ID,
-                video="https://telegra.ph/file/36221d40afde82941ffff.mp4",  # ✅ Şık müzik dalgası videosu
-                caption=(
-                    "✅ **AMED Bot Aktif!**\n\n"
+                text=(
+                    "✅ **ArchMusic Bot Aktif!**\n\n"
                     "🎵 Müzik sistemleri başarıyla başlatıldı.\n"
                     "📡 Komutlar yüklendi ve çalışıyor.\n\n"
                     "✨ Keyifli dinlemeler!"
                 ),
             )
-        except Exception:
+        except Exception as e:
             self.logger.error(
-                "🚫 Log grubuna video gönderilemedi. Botu gruba eklediğinizden ve yönetici yaptığınızdan emin olun."
+                f"🚫 Log grubuna mesaj gönderilemedi: {e}\n"
+                f"Botu gruba ekleyip yönetici yaptığınızdan emin olun."
             )
             sys.exit()
