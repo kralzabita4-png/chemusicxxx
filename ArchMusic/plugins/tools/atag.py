@@ -1,0 +1,54 @@
+from pyrogram import filters
+from pyrogram.types import Message
+from config import BANNED_USERS
+from ArchMusic import app
+
+# İptal edilen kullanıcı listesi
+cancel_users = set()
+
+# /cancel komutu — işlemi iptal eder
+@app.on_message(filters.command("cancel") & filters.group & ~BANNED_USERS)
+async def cancel_atag(client, message: Message):
+    cancel_users.add(message.from_user.id)
+    await message.reply("❌ İşlem iptal edildi. Etiketleme durduruldu.")
+
+# /atag komutu — tüm yöneticileri etiketler
+@app.on_message(filters.command("atag") & filters.group & ~BANNED_USERS)
+async def atag_command(client, message: Message):
+    user_id = message.from_user.id
+
+    # Daha önce iptal etmişse
+    if user_id in cancel_users:
+        cancel_users.remove(user_id)
+        return await message.reply("⛔ Etiketleme işlemi iptal edilmişti.")
+
+    try:
+        chat = message.chat
+        admins = await app.get_chat_members(chat.id, filter="administrators")
+    except Exception as e:
+        return await message.reply(f"❌ Yöneticiler alınamadı: {e}")
+
+    if not admins:
+        return await message.reply("❗ Grupta hiç yönetici bulunamadı.")
+
+    etiketlenen = 0
+    etiketlenmeyen = 0
+
+    for admin in admins:
+        if admin.user.is_bot:
+            continue  # Botları atla
+        try:
+            await message.reply(
+                f"👑 [{admin.user.first_name}](tg://user?id={admin.user.id})",
+                quote=False
+            )
+            etiketlenen += 1
+        except Exception:
+            etiketlenmeyen += 1
+
+    await message.reply(
+        f"📊 **Yönetici Etiketleme Sonucu:**\n"
+        f"✅ Etiketlenen: {etiketlenen}\n"
+        f"❌ Etiketlenemeyen: {etiketlenmeyen}\n"
+        f"🏁 İşlem tamamlandı."
+    )
