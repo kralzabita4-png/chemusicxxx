@@ -1,63 +1,119 @@
-from pyrogram import Client
-from pyrogram.types import ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram import Client, filters
+from pyrogram.types import Message, ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
+from pyrogram.enums import ChatMemberStatus
 from config import LOG_GROUP_ID
 from ArchMusic import app
 
 
-async def new_message(chat_id: int, message: str, reply_markup=None):
-    await app.send_message(chat_id=chat_id, text=message, reply_markup=reply_markup)
+async def send_log(text: str, reply_markup=None):
+    try:
+        await app.send_message(chat_id=LOG_GROUP_ID, text=text, reply_markup=reply_markup)
+    except Exception as e:
+        print(f"[HATA] Log grubuna mesaj gönderilemedi:\n{e}")
 
 
+# ✅ Gruba bot veya kullanıcı eklendiğinde
+@app.on_message(filters.new_chat_members)
+async def on_new_member(client: Client, message: Message):
+    bot_id = (await client.get_me()).id
+    for user in message.new_chat_members:
+        ad = message.from_user.first_name if message.from_user else "Bilinmiyor"
+        chat = message.chat
+        chat_link = f"@{chat.username}" if chat.username else "Yok"
+
+        if user.id == bot_id:
+            text = (
+                f"<u>#✅ **Bot Gruba Eklendi**</u>\n\n"
+                f"**Grup:** {chat.title}\n"
+                f"**ID:** `{chat.id}`\n"
+                f"**Link:** {chat_link}\n"
+                f"**Ekleyen:** {ad}"
+            )
+        else:
+            text = (
+                f"<u>#👤 **Kullanıcı Eklendi**</u>\n\n"
+                f"**Adı:** {user.mention}\n"
+                f"**ID:** `{user.id}`\n"
+                f"**Grup:** {chat.title}\n"
+                f"**Ekleyen:** {ad}"
+            )
+
+        markup = InlineKeyboardMarkup(
+            [[InlineKeyboardButton(ad, user_id=message.from_user.id)]] if message.from_user else []
+        )
+
+        await send_log(text, markup)
+
+
+# ✅ Bot veya kullanıcı gruptan çıkarıldığında
+@app.on_message(filters.left_chat_member)
+async def on_left_member(client: Client, message: Message):
+    bot_id = (await client.get_me()).id
+    user = message.left_chat_member
+    ad = message.from_user.first_name if message.from_user else "Bilinmiyor"
+    chat = message.chat
+
+    if user.id == bot_id:
+        text = (
+            f"<u>#🚫 **Bot Gruptan Atıldı**</u>\n\n"
+            f"**Grup:** {chat.title}\n"
+            f"**ID:** `{chat.id}`\n"
+            f"**Atan:** {ad}"
+        )
+    else:
+        text = (
+            f"<u>#🚷 **Kullanıcı Çıkarıldı**</u>\n\n"
+            f"**Adı:** {user.mention}\n"
+            f"**ID:** `{user.id}`\n"
+            f"**Grup:** {chat.title}\n"
+            f"**Çıkaran:** {ad}"
+        )
+
+    markup = InlineKeyboardMarkup(
+        [[InlineKeyboardButton(ad, user_id=message.from_user.id)]] if message.from_user else []
+    )
+
+    await send_log(text, markup)
+
+
+# ✅ Yönetici, ban, üyelik değişiklikleri
 @app.on_chat_member_updated()
 async def on_chat_member_update(client: Client, update: ChatMemberUpdated):
     old = update.old_chat_member
     new = update.new_chat_member
-    user = update.new_chat_member.user
+    user = new.user
     chat = update.chat
-    actor = update.from_user
 
-    actor_name = actor.mention if actor else "Bilinmiyor"
-    actor_id = actor.id if actor else None
-    user_name = user.mention if user else "Bilinmiyor"
-    title = chat.title
-    chat_id = chat.id
+    if old.status != new.status:
+        if new.status == ChatMemberStatus.ADMINISTRATOR:
+            text = (
+                f"<u>#🛡️ **Yönetici Yapıldı**</u>\n\n"
+                f"**Kullanıcı:** {user.mention}\n"
+                f"**ID:** `{user.id}`\n"
+                f"**Grup:** {chat.title}"
+            )
+        elif old.status == ChatMemberStatus.ADMINISTRATOR and new.status == ChatMemberStatus.MEMBER:
+            text = (
+                f"<u>#⚠️ **Yönetici Alındı**</u>\n\n"
+                f"**Kullanıcı:** {user.mention}\n"
+                f"**ID:** `{user.id}`\n"
+                f"**Grup:** {chat.title}"
+            )
+        elif new.status == ChatMemberStatus.BANNED:
+            text = (
+                f"<u>#⛔️ **Kullanıcı Banlandı**</u>\n\n"
+                f"**Kullanıcı:** {user.mention}\n"
+                f"**ID:** `{user.id}`\n"
+                f"**Grup:** {chat.title}"
+            )
+        elif old.status == ChatMemberStatus.BANNED and new.status == ChatMemberStatus.MEMBER:
+            text = (
+                f"<u>#🔓 **Kullanıcı Ban Kaldırıldı**</u>\n\n"
+                f"**Kullanıcı:** {user.mention}\n"
+                f"**ID:** `{user.id}`\n"
+                f"**Grup:** {chat.title}"
+            )
+        else:
+            return  # diğer durumları geç
 
-    action = None
-
-    # Bot olayları
-    if user.is_self:
-        if new.status == "kicked":
-            action = "Bot gruptan **banlandı**"
-        elif old.status == "kicked" and new.status == "member":
-            action = "Bot gruba **geri alındı** (ban kaldırıldı)"
-    else:
-        # Kullanıcı banlandı
-        if new.status == "kicked":
-            action = f"{user_name} gruptan **banlandı**"
-        # Kullanıcı ban kaldırıldı
-        elif old.status == "kicked" and new.status == "member":
-            action = f"{user_name} gruba **geri alındı** (ban kaldırıldı)"
-        # Kullanıcı yönetici yapıldı
-        elif old.status == "member" and new.status == "administrator":
-            action = f"{user_name} **yönetici yapıldı**"
-        # Kullanıcı yöneticilikten alındı
-        elif old.status == "administrator" and new.status == "member":
-            action = f"{user_name} **yöneticilikten alındı**"
-        # Kullanıcı gruptan çıkarıldı (left)
-        elif new.status == "left":
-            action = f"{user_name} gruptan **ayrıldı veya çıkarıldı**"
-
-    if action:
-        text = (
-            f"<u>#ÜyelikGüncellemesi</u>\n\n"
-            f"**Grup:** {title}\n"
-            f"**Grup ID:** `{chat_id}`\n"
-            f"**İşlem:** {action}\n"
-            f"**İşlemi Yapan:** {actor_name}"
-        )
-
-        reply_markup = InlineKeyboardMarkup(
-            [[InlineKeyboardButton(actor_name, user_id=actor_id)]] if actor_id else []
-        )
-
-        await new_message(LOG_GROUP_ID, text, reply_markup)
+        await send_log(text)
