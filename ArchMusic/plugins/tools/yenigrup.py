@@ -1,4 +1,4 @@
-# group_events.py
+# ArchMusic/plugins/tools/yenigrup.py
 
 from pyrogram import Client, filters
 from pyrogram.types import Message, ChatMemberUpdated, InlineKeyboardMarkup, InlineKeyboardButton
@@ -77,7 +77,7 @@ async def on_left_member(client: Client, message: Message):
     await new_message(LOG_GROUP_ID, text, reply_markup)
 
 
-# 3. Üyelik, ban ve yetki değişikliklerini algıla
+# 3. Üyelik, ban, unban, admin yetkilerini algıla
 @app.on_chat_member_updated()
 async def on_chat_member_update(client: Client, update: ChatMemberUpdated):
     old = update.old_chat_member
@@ -89,23 +89,20 @@ async def on_chat_member_update(client: Client, update: ChatMemberUpdated):
 
     action = None
 
-    # Bot'a yapılan işlem
+    # Bot'a işlem yapıldıysa
     if user.is_self:
-        if new.status == ChatMemberStatus.KICKED:
+        if new.status == ChatMemberStatus.BANNED:
             action = "Bot gruptan **banlandı**"
-        elif old.status == ChatMemberStatus.KICKED and new.status == ChatMemberStatus.MEMBER:
+        elif old.status == ChatMemberStatus.BANNED and new.status == ChatMemberStatus.MEMBER:
             action = "Bot gruba **geri alındı** (ban kaldırıldı)"
-
     else:
-        # Kullanıcı banlandı veya ban kaldırıldı
-        if new.status == ChatMemberStatus.KICKED:
+        # Kullanıcıya işlem yapıldıysa
+        if new.status == ChatMemberStatus.BANNED:
             action = f"{user.mention} gruptan **banlandı**"
-        elif old.status == ChatMemberStatus.KICKED and new.status == ChatMemberStatus.MEMBER:
+        elif old.status == ChatMemberStatus.BANNED and new.status == ChatMemberStatus.MEMBER:
             action = f"{user.mention} gruba **geri alındı** (ban kaldırıldı)"
-
-        # Yönetici yapıldı / alındı
         elif old.status == ChatMemberStatus.MEMBER and new.status == ChatMemberStatus.ADMINISTRATOR:
-            action = f"{user.mention} grubun **yöneticisi yapıldı**"
+            action = f"{user.mention} **yönetici yapıldı**"
         elif old.status == ChatMemberStatus.ADMINISTRATOR and new.status == ChatMemberStatus.MEMBER:
             action = f"{user.mention} **yöneticilikten alındı**"
 
