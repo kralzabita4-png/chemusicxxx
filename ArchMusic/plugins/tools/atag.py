@@ -1,47 +1,27 @@
-import asyncio
-from collections import defaultdict
 from pyrogram import filters
 from pyrogram.types import Message
 from config import BANNED_USERS
 from ArchMusic import app
 
-# Kullanıcı bazlı iptal takip sistemi
-cancel_atag = defaultdict(set)
-
-# /cancel komutu — Etiketleme iptali
-@app.on_message(filters.command("cancel") & filters.group & ~BANNED_USERS)
-async def cancel_atag_command(client, message: Message):
-    cancel_atag[message.chat.id].add(message.from_user.id)
-    await message.reply("❌ Etiketleme işlemi iptal edildi.")
-
-# /atag komutu — Yöneticileri etiketleme
 @app.on_message(filters.command("atag") & filters.group & ~BANNED_USERS)
-async def atag_command(client, message: Message):
-    user_id = message.from_user.id
-    chat_id = message.chat.id
-
-    if user_id in cancel_atag[chat_id]:
-        cancel_atag[chat_id].remove(user_id)
-        return await message.reply("⛔ İşlem zaten iptal edilmişti.")
-
+async def atag(client, message: Message):
     await message.reply("📨 Yöneticiler etiketleniyor... /cancel yazarak durdurabilirsin.")
 
     try:
-        admins = await app.get_chat_members(chat_id, filter="administrators")
+        admins = []
+        async for member in app.get_chat_administrators(message.chat.id):
+            if not member.user.is_bot:
+                admins.append(member)
     except Exception as e:
         return await message.reply(f"⚠️ Yöneticiler alınamadı:\n`{e}`")
+
+    if not admins:
+        return await message.reply("❗ Hiç yönetici bulunamadı.")
 
     etiketlenen = 0
     atilamayan = 0
 
-    async for admin in admins:
-        if admin.user.is_bot:
-            continue
-
-        if user_id in cancel_atag[chat_id]:
-            cancel_atag[chat_id].remove(user_id)
-            return await message.reply("🛑 Etiketleme işlemi iptal edildi.")
-
+    for admin in admins:
         try:
             await message.reply(
                 f"👑 [{admin.user.first_name}](tg://user?id={admin.user.id})",
@@ -51,11 +31,8 @@ async def atag_command(client, message: Message):
         except:
             atilamayan += 1
 
-        await asyncio.sleep(1.5)  # Spam koruması
-
     await message.reply(
-        f"✅ **Etiketleme Bitti**\n"
-        f"👥 Etiketlenen: {etiketlenen}\n"
-        f"❌ Atılamayan: {atilamayan}\n"
-        f"🎯 Toplam: {etiketlenen + atilamayan}"
+        f"✅ **Etiketleme Tamamlandı**\n"
+        f"📍 Etiketlenen: {etiketlenen}\n"
+        f"❌ Etiketlenemeyen: {atilamayan}"
     )
