@@ -35,8 +35,6 @@ async def play_logs(message, streamtype):
     else:
         chatusername = "Gizli Grup"
 
-    # **Bot uptime kaldırıldı**
-
     # Sunucu uptime
     boot_time = datetime.fromtimestamp(psutil.boot_time())
     system_uptime = str(datetime.now() - boot_time).split('.')[0]
@@ -47,6 +45,8 @@ async def play_logs(message, streamtype):
 
     # Mesaj geçmişi sayısı ve ilk sorgu tarihi
     tum_sorgular = await get_queries()
+    if not isinstance(tum_sorgular, list):
+        tum_sorgular = []
     kullanici_sorgulari = [q for q in tum_sorgular if q.get('user_id') == user.id]
     mesaj_gecmisi_sayisi = len(kullanici_sorgulari)
     if kullanici_sorgulari:
