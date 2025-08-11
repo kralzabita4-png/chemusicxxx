@@ -1,4 +1,3 @@
-#
 # Copyright (C) 2021-2023 by ArchBots@Github, < https://github.com/ArchBots >.
 #
 # This file is part of < https://github.com/ArchBots/ArchMusic > project,
@@ -8,7 +7,6 @@
 # All rights reserved.
 
 from typing import Union
-
 from pyrogram.types import InlineKeyboardButton
 
 from config import GITHUB_REPO, SUPPORT_CHANNEL, SUPPORT_GROUP
@@ -39,16 +37,12 @@ def start_pannel(_):
             ]
         )
     else:
-        # Tekli buton varsa bile 2'li satır yapıyoruz, boş buton ekleyerek.
         if SUPPORT_CHANNEL and not SUPPORT_GROUP:
             buttons.append(
                 [
                     InlineKeyboardButton(
                         text=_["S_B_4"], url=f"{SUPPORT_CHANNEL}"
-                    ),
-                    InlineKeyboardButton(
-                        text=" ", callback_data="ignore"  # boş buton veya yok sayılan
-                    ),
+                    )
                 ]
             )
         elif SUPPORT_GROUP and not SUPPORT_CHANNEL:
@@ -56,10 +50,7 @@ def start_pannel(_):
                 [
                     InlineKeyboardButton(
                         text=_["S_B_3"], url=f"{SUPPORT_GROUP}"
-                    ),
-                    InlineKeyboardButton(
-                        text=" ", callback_data="ignore"
-                    ),
+                    )
                 ]
             )
     return buttons
@@ -70,10 +61,7 @@ def private_panel(_, BOT_USERNAME, OWNER: Union[bool, int] = None):
         [
             InlineKeyboardButton(
                 text=_["S_B_8"], callback_data="settings_back_helper"
-            ),
-            InlineKeyboardButton(
-                text=" ", callback_data="ignore"
-            ),
+            )
         ],
     ]
     if SUPPORT_CHANNEL and SUPPORT_GROUP:
@@ -93,10 +81,7 @@ def private_panel(_, BOT_USERNAME, OWNER: Union[bool, int] = None):
                 [
                     InlineKeyboardButton(
                         text=_["S_B_4"], url=f"{SUPPORT_CHANNEL}"
-                    ),
-                    InlineKeyboardButton(
-                        text=" ", callback_data="ignore"
-                    ),
+                    )
                 ]
             )
         elif SUPPORT_GROUP and not SUPPORT_CHANNEL:
@@ -104,10 +89,7 @@ def private_panel(_, BOT_USERNAME, OWNER: Union[bool, int] = None):
                 [
                     InlineKeyboardButton(
                         text=_["S_B_3"], url=f"{SUPPORT_GROUP}"
-                    ),
-                    InlineKeyboardButton(
-                        text=" ", callback_data="ignore"
-                    ),
+                    )
                 ]
             )
 
@@ -116,19 +98,13 @@ def private_panel(_, BOT_USERNAME, OWNER: Union[bool, int] = None):
             InlineKeyboardButton(
                 text=_["S_B_5"],
                 url=f"https://t.me/{BOT_USERNAME}?startgroup=true",
-            ),
-            InlineKeyboardButton(
-                text=" ", callback_data="ignore"
-            ),
+            )
         ]
     )
     if GITHUB_REPO and OWNER:
         buttons.append(
             [
-                InlineKeyboardButton(text=_["S_B_7"], user_id=OWNER),
-                InlineKeyboardButton(
-                    text=" ", callback_data="ignore"
-                ),
+                InlineKeyboardButton(text=_["S_B_7"], user_id=OWNER)
             ]
         )
     else:
@@ -137,10 +113,7 @@ def private_panel(_, BOT_USERNAME, OWNER: Union[bool, int] = None):
                 [
                     InlineKeyboardButton(
                         text=_["S_B_6"], url=f"https://github.com/ArchBots/ArchMusic"
-                    ),
-                    InlineKeyboardButton(
-                        text=" ", callback_data="ignore"
-                    ),
+                    )
                 ]
             )
         if OWNER and not GITHUB_REPO:
@@ -148,10 +121,7 @@ def private_panel(_, BOT_USERNAME, OWNER: Union[bool, int] = None):
                 [
                     InlineKeyboardButton(
                         text=_["S_B_7"], user_id=OWNER
-                    ),
-                    InlineKeyboardButton(
-                        text=" ", callback_data="ignore"
-                    ),
+                    )
                 ]
             )
     return buttons
