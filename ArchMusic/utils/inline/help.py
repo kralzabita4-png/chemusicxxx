@@ -1,12 +1,3 @@
-#
-# Copyright (C) 2021-2023 by ArchBots@Github, < https://github.com/ArchBots >.
-#
-# This file is part of < https://github.com/ArchBots/ArchMusic > project,
-# and is released under the "GNU v3.0 License Agreement".
-# Please see < https://github.com/ArchBots/ArchMusic/blob/master/LICENSE >
-#
-# All rights reserved.
-#
 
 from typing import Union
 from pyrogram.types import InlineKeyboardButton, InlineKeyboardMarkup
@@ -37,11 +28,11 @@ def help_pannel(_, START: Union[bool, int] = None):
         ("H_B_9", "hb9"),
     ]
 
-    # Butonları 2'li gruplar halinde satırlara yerleştir
+    # Butonları 3'lü gruplar halinde satırlara yerleştir
     keyboard = []
-    for i in range(0, len(button_data), 2):
+    for i in range(0, len(button_data), 3):
         row = []
-        for j in range(2):
+        for j in range(3):
             if i + j < len(button_data):
                 text_key, cb_key = button_data[i + j]
                 row.append(
