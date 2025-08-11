@@ -128,17 +128,14 @@ async def song_helper_cb(client, CallbackQuery, _):
     callback_request = callback_data.split(None, 1)[1]
     stype, vidid = callback_request.split("|")
     try:
-        await CallbackQuery.answer(_["song_6"], show_alert=True)
-    except:
-        pass
+        formats_available, link = await YouTube.formats(
+            vidid, True
+        )
+    except Exception as e:
+        print(e)
+        return await CallbackQuery.edit_message_text(_["song_7"])
+    keyboard = InlineKeyboard()
     if stype == "audio":
-        try:
-            formats_available, link = await YouTube.formats(
-                vidid, True
-            )
-        except:
-            return await CallbackQuery.edit_message_text(_["song_7"])
-        keyboard = InlineKeyboard()
         done = []
         for x in formats_available:
             check = x["format"]
@@ -171,24 +168,24 @@ async def song_helper_cb(client, CallbackQuery, _):
             reply_markup=keyboard
         )
     else:
-        try:
-            formats_available, link = await YouTube.formats(
-                vidid, True
-            )
-        except Exception as e:
-            print(e)
-            return await CallbackQuery.edit_message_text(_["song_7"])
-        keyboard = InlineKeyboard()
-        # AVC Formats Only [ ArchMusic Bot]
+        # Video format filtreleme kısmı (esnek hale getirildi)
         done = [160, 133, 134, 135, 136, 137, 298, 299, 264, 304, 266]
+
+        filtered_formats = []
         for x in formats_available:
-            check = x["format"]
             if x["filesize"] is None:
                 continue
-            if int(x["format_id"]) not in done:
-                continue
+            if int(x["format_id"]) in done:
+                filtered_formats.append(x)
+
+        if not filtered_formats:
+            # Eğer filtrelenmiş format yoksa, tüm formatları göster
+            filtered_formats = [x for x in formats_available if x["filesize"] is not None]
+
+        for x in filtered_formats:
             sz = convert_bytes(x["filesize"])
-            ap = check.split("-")[1]
+            check = x["format"]
+            ap = check.split("-")[1] if "-" in check else check
             to = f"{ap} = {sz}"
             keyboard.row(
                 InlineKeyboardButton(
