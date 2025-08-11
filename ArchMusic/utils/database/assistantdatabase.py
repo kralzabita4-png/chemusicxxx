@@ -1,24 +1,17 @@
-#
-# Copyright (C) 2021-2023 by ArchBots@Github, < https://github.com/ArchBots >.
-#
-# This file is part of < https://github.com/ArchBots/ArchMusic > project,
-# and is released under the "GNU v3.0 License Agreement".
-# Please see < https://github.com/ArchBots/ArchMusic/blob/master/LICENSE >
-#
-# All rights reserved.
-#
-
 import random
-
 from ArchMusic import userbot
 from ArchMusic.core.mongo import mongodb
+from ArchMusic.core.userbot import assistants  # Tek seferde import edildi
 
 db = mongodb.assistants
 
-assistantdict = {}
+assistantdict = {}  # chat_id -> assistant numarası önbelleği
 
 
 async def get_client(assistant: int):
+    """
+    Asistan numarasına göre ilgili userbot client'ını döner.
+    """
     if int(assistant) == 1:
         return userbot.one
     elif int(assistant) == 2:
@@ -32,8 +25,10 @@ async def get_client(assistant: int):
 
 
 async def set_assistant(chat_id):
-    from ArchMusic.core.userbot import assistants
-
+    """
+    Rastgele bir asistan seçer, belleğe ve veritabanına kaydeder.
+    Seçilen asistanın userbot client'ını döner.
+    """
     ran_assistant = random.choice(assistants)
     assistantdict[chat_id] = ran_assistant
     await db.update_one(
@@ -41,40 +36,44 @@ async def set_assistant(chat_id):
         {"$set": {"assistant": ran_assistant}},
         upsert=True,
     )
-    userbot = await get_client(ran_assistant)
-    return userbot
+    userbot_client = await get_client(ran_assistant)
+    return userbot_client
 
 
 async def get_assistant(chat_id: int) -> str:
-    from ArchMusic.core.userbot import assistants
-
+    """
+    Verilen chat_id için önce önbellekte asistan aranır.
+    Yoksa veritabanından bulunur, yoksa rastgele atanır.
+    Userbot client'ı döner.
+    """
     assistant = assistantdict.get(chat_id)
     if not assistant:
-        dbassistant = await db.find_one({"chat_id": chat_id})
+        try:
+            dbassistant = await db.find_one({"chat_id": chat_id})
+        except Exception as e:
+            print(f"DB hatası: {e}")
+            return await set_assistant(chat_id)
+
         if not dbassistant:
-            userbot = await set_assistant(chat_id)
-            return userbot
+            return await set_assistant(chat_id)
         else:
             got_assis = dbassistant["assistant"]
             if got_assis in assistants:
                 assistantdict[chat_id] = got_assis
-                userbot = await get_client(got_assis)
-                return userbot
+                return await get_client(got_assis)
             else:
-                userbot = await set_assistant(chat_id)
-                return userbot
+                return await set_assistant(chat_id)
     else:
         if assistant in assistants:
-            userbot = await get_client(assistant)
-            return userbot
+            return await get_client(assistant)
         else:
-            userbot = await set_assistant(chat_id)
-            return userbot
+            return await set_assistant(chat_id)
 
 
 async def set_calls_assistant(chat_id):
-    from ArchMusic.core.userbot import assistants
-
+    """
+    Rastgele asistan seçer, kaydeder, sadece numarasını döner.
+    """
     ran_assistant = random.choice(assistants)
     assistantdict[chat_id] = ran_assistant
     await db.update_one(
@@ -86,25 +85,32 @@ async def set_calls_assistant(chat_id):
 
 
 async def group_assistant(self, chat_id: int) -> int:
-    from ArchMusic.core.userbot import assistants
-
+    """
+    chat_id için asistan numarasını bulur veya atar,
+    self içinden ilgili userbot client'ını döner.
+    """
     assistant = assistantdict.get(chat_id)
     if not assistant:
-        dbassistant = await db.find_one({"chat_id": chat_id})
-        if not dbassistant:
+        try:
+            dbassistant = await db.find_one({"chat_id": chat_id})
+        except Exception as e:
+            print(f"DB hatası: {e}")
             assis = await set_calls_assistant(chat_id)
         else:
-            assis = dbassistant["assistant"]
-            if assis in assistants:
-                assistantdict[chat_id] = assis
-                assis = assis
-            else:
+            if not dbassistant:
                 assis = await set_calls_assistant(chat_id)
+            else:
+                assis = dbassistant["assistant"]
+                if assis in assistants:
+                    assistantdict[chat_id] = assis
+                else:
+                    assis = await set_calls_assistant(chat_id)
     else:
         if assistant in assistants:
             assis = assistant
         else:
             assis = await set_calls_assistant(chat_id)
+
     if int(assis) == 1:
         return self.one
     elif int(assis) == 2:
