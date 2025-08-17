@@ -1,23 +1,20 @@
-#
-# Copyright (C) 2021-2023 by ArchBots@Github, < https://github.com/ArchBots >.
-#
-# This file is part of < https://github.com/ArchBots/ArchMusic > project,
-# and is released under the "GNU v3.0 License Agreement".
-# Please see < https://github.com/ArchBots/ArchMusic/blob/master/LICENSE >
-#
-# All rights reserved.
+
 #
 
 from typing import Union
-
 from pyrogram.types import Message
 
 
 def get_readable_time(seconds: int) -> str:
+    """
+    Convert seconds into a human-readable time format.
+    Example: 3661 -> "1h:1m:1s"
+    """
     count = 0
     ping_time = ""
     time_list = []
     time_suffix_list = ["s", "m", "h", "days"]
+
     while count < 4:
         count += 1
         if count < 3:
@@ -28,22 +25,29 @@ def get_readable_time(seconds: int) -> str:
             break
         time_list.append(int(result))
         seconds = int(remainder)
+
     for i in range(len(time_list)):
         time_list[i] = str(time_list[i]) + time_suffix_list[i]
+
     if len(time_list) == 4:
         ping_time += time_list.pop() + ", "
+
     time_list.reverse()
     ping_time += ":".join(time_list)
     return ping_time
 
 
 def convert_bytes(size: float) -> str:
-    """humanize size"""
+    """
+    Convert bytes into human-readable KiB, MiB, GiB, etc.
+    Example: 1048576 -> "1.00 MiB"
+    """
     if not size:
         return ""
     power = 1024
     t_n = 0
     power_dict = {0: " ", 1: "Ki", 2: "Mi", 3: "Gi", 4: "Ti"}
+
     while size > power:
         size /= power
         t_n += 1
@@ -51,6 +55,10 @@ def convert_bytes(size: float) -> str:
 
 
 async def int_to_alpha(user_id: int) -> str:
+    """
+    Convert integer user_id into alphabet code.
+    Example: 123 -> "bcd"
+    """
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
     text = ""
     user_id = str(user_id)
@@ -60,24 +68,34 @@ async def int_to_alpha(user_id: int) -> str:
 
 
 async def alpha_to_int(user_id_alphabet: str) -> int:
+    """
+    Convert alphabet code back into integer user_id.
+    Example: "bcd" -> 123
+    """
     alphabet = ["a", "b", "c", "d", "e", "f", "g", "h", "i", "j"]
     user_id = ""
     for i in user_id_alphabet:
         index = alphabet.index(i)
         user_id += str(index)
-    user_id = int(user_id)
-    return user_id
+    return int(user_id)
 
 
-def time_to_seconds(time):
-    stringt = str(time)
+def time_to_seconds(time: str) -> int:
+    """
+    Convert time string "hh:mm:ss" into total seconds.
+    Example: "01:02:03" -> 3723
+    """
     return sum(
         int(x) * 60**i
-        for i, x in enumerate(reversed(stringt.split(":")))
+        for i, x in enumerate(reversed(str(time).split(":")))
     )
 
 
-def seconds_to_min(seconds):
+def seconds_to_min(seconds: Union[int, None]) -> str:
+    """
+    Convert seconds into formatted string dd:hh:mm:ss.
+    Example: 3661 -> "01:01:01"
+    """
     if seconds is not None:
         seconds = int(seconds)
         d, h, m, s = (
@@ -98,41 +116,8 @@ def seconds_to_min(seconds):
 
 
 formats = [
-    "webm",
-    "mkv",
-    "flv",
-    "vob",
-    "ogv",
-    "ogg",
-    "rrc",
-    "gifv",
-    "mng",
-    "mov",
-    "avi",
-    "qt",
-    "wmv",
-    "yuv",
-    "rm",
-    "asf",
-    "amv",
-    "mp4",
-    "m4p",
-    "m4v",
-    "mpg",
-    "mp2",
-    "mpeg",
-    "mpe",
-    "mpv",
-    "m4v",
-    "svi",
-    "3gp",
-    "3g2",
-    "mxf",
-    "roq",
-    "nsv",
-    "flv",
-    "f4v",
-    "f4p",
-    "f4a",
-    "f4b",
+    "webm", "mkv", "flv", "vob", "ogv", "ogg", "rrc", "gifv", "mng",
+    "mov", "avi", "qt", "wmv", "yuv", "rm", "asf", "amv", "mp4", "m4p",
+    "m4v", "mpg", "mp2", "mpeg", "mpe", "mpv", "svi", "3gp", "3g2",
+    "mxf", "roq", "nsv", "f4v", "f4p", "f4a", "f4b",
 ]
