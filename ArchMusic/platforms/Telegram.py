@@ -35,14 +35,13 @@ MAX_ACTIVE_DOWNLOADS = 10
 logging.basicConfig(level=logging.INFO)
 
 
-# 🔥 Kuyrukta bekleyen kullanıcıların gerçek zamanlı ETA güncellemesi
+# Kuyrukta bekleyen kullanıcıların gerçek zamanlı ETA güncellemesi
 async def update_queue_messages():
     while True:
         active_downloads = list(downloader.values())
         total_active_eta = sum(active_downloads) if active_downloads else 0
 
         for pos, (_, message, mystic, fname) in enumerate(download_queue, start=1):
-            # 🔥 Her kullanıcı için tahmini bekleme süresi
             est_wait = total_active_eta + sum(list(downloader.values())[:pos-1])
             est_wait_readable = get_readable_time(int(est_wait)) if est_wait else "0 sec"
             try:
@@ -53,7 +52,7 @@ async def update_queue_messages():
                 pass
         await asyncio.sleep(10)
 
-# 🔥 Kuyruk güncelleme başlat
+# Kuyruk güncelleme başlat
 asyncio.create_task(update_queue_messages())
 
 
@@ -80,25 +79,14 @@ class TeleAPI:
             link = f"https://t.me/c/{xf}/{message.reply_to_message.id}"
         return link
 
-    async def get_filename(
-        self, file, audio: Union[bool, str] = None
-    ):
+    async def get_filename(self, file, audio: Union[bool, str] = None):
         try:
             file_name = file.file_name
             if file_name is None:
-                file_name = (
-                    "Telegram Audio File"
-                    if audio
-                    else "Telegram Video File"
-                )
-
+                file_name = "Telegram Audio File" if audio else "Telegram Video File"
         except Exception as e:
             logging.error(f"Filename error: {e}")
-            file_name = (
-                "Telegram Audio File"
-                if audio
-                else "Telegram Video File"
-            )
+            file_name = "Telegram Audio File" if audio else "Telegram Video File"
         return file_name
 
     async def get_duration(self, file):
@@ -109,41 +97,21 @@ class TeleAPI:
             dur = "Unknown"
         return dur
 
-    async def get_filepath(
-        self,
-        audio: Union[bool, str] = None,
-        video: Union[bool, str] = None,
-    ):
+    async def get_filepath(self, audio: Union[bool, str] = None, video: Union[bool, str] = None):
         if audio:
             try:
-                file_name = (
-                    audio.file_unique_id
-                    + "."
-                    + (
-                        (audio.file_name.split(".")[-1])
-                        if (not isinstance(audio, Voice))
-                        else "ogg"
-                    )
-                )
+                file_name = audio.file_unique_id + "." + ((audio.file_name.split(".")[-1]) if (not isinstance(audio, Voice)) else "ogg")
             except Exception as e:
                 logging.error(f"Audio filepath error: {e}")
                 file_name = audio.file_unique_id + ".ogg"
-            file_name = os.path.join(
-                os.path.realpath("downloads"), file_name
-            )
+            file_name = os.path.join(os.path.realpath("downloads"), file_name)
         if video:
             try:
-                file_name = (
-                    video.file_unique_id
-                    + "."
-                    + (video.file_name.split(".")[-1])
-                )
+                file_name = video.file_unique_id + "." + (video.file_name.split(".")[-1])
             except Exception as e:
                 logging.error(f"Video filepath error: {e}")
                 file_name = video.file_unique_id + ".mp4"
-            file_name = os.path.join(
-                os.path.realpath("downloads"), file_name
-            )
+            file_name = os.path.join(os.path.realpath("downloads"), file_name)
         return file_name
 
     async def download(self, _, message, mystic, fname):
@@ -152,7 +120,6 @@ class TeleAPI:
         if os.path.exists(fname):
             return True
 
-        # 🔥 Kuyruğa ekleme ve sıra gösterimi
         if len(downloader) >= MAX_ACTIVE_DOWNLOADS:
             queue_position = len(download_queue) + 1
             await mystic.edit_text(
@@ -169,14 +136,7 @@ class TeleAPI:
                 start_time = speed_counter.get(message.id)
                 check_time = current_time - start_time
                 upl = InlineKeyboardMarkup(
-                    [
-                        [
-                            InlineKeyboardButton(
-                                text="🚦 İndirmeyi Durdur",
-                                callback_data="stop_downloading",
-                            ),
-                        ]
-                    ]
+                    [[InlineKeyboardButton(text="🚦 İndirmeyi Durdur", callback_data="stop_downloading")]]
                 )
                 if datetime.now() > left_time.get(message.id):
                     percentage = current * 100 / total
@@ -193,7 +153,6 @@ class TeleAPI:
                     text = f"""
 **{MUSIC_BOT_NAME} Telegram Medya İndiricisi**
 
-
 **Total FileSize:** {total_size}
 **Completed:** {completed_size} 
 **Percentage:** {percentage[:5]}%
@@ -204,19 +163,13 @@ class TeleAPI:
                         await mystic.edit_text(text, reply_markup=upl)
                     except Exception as e:
                         logging.error(f"Progress update error: {e}")
-                    left_time[
-                        message.id
-                    ] = datetime.now() + timedelta(seconds=self.sleep)
+                    left_time[message.id] = datetime.now() + timedelta(seconds=self.sleep)
 
             speed_counter[message.id] = time.time()
             left_time[message.id] = datetime.now()
 
             try:
-                await app.download_media(
-                    message.reply_to_message,
-                    file_name=fname,
-                    progress=progress,
-                )
+                await app.download_media(message.reply_to_message, file_name=fname, progress=progress)
                 await mystic.edit_text("✅ Başarıyla İndirildi. Dosya şimdi işleniyor")
 
                 # Dosya otomatik temizleme
@@ -226,7 +179,6 @@ class TeleAPI:
 
                 downloader.pop(message.id)
 
-                # Kuyruktaki bir sonraki indirmeyi başlat
                 if download_queue:
                     next_task = download_queue.popleft()
                     asyncio.create_task(self.download(*next_task))
