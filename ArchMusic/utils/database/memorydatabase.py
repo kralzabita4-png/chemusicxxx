@@ -1,4 +1,12 @@
-
+#
+# Copyright (C) 2021-2023 by ArchBots@Github, < https://github.com/ArchBots >.
+#
+# This file is part of < https://github.com/ArchBots/ArchMusic > project,
+# and is released under the "GNU v3.0 License Agreement".
+# Please see < https://github.com/ArchBots/ArchMusic/blob/master/LICENSE >
+#
+# All rights reserved.
+#
 
 import config
 from config import PRIVATE_BOT_MODE
@@ -44,16 +52,13 @@ vlimit = []
 maintenance = []
 suggestion = {}
 autoend = {}
-queue = {}  # <-- Queue dictionary eklendi
+queue = {}  # Queue dictionary
 
 # -------------------------
 # QUEUE FONKSİYONLARI
 # -------------------------
 async def get_queue(chat_id: int) -> list:
-    q = queue.get(chat_id)
-    if not q:
-        return []
-    return q
+    return queue.get(chat_id, [])
 
 async def add_to_queue(chat_id: int, song):
     if chat_id not in queue:
@@ -65,7 +70,7 @@ async def remove_from_queue(chat_id: int, song):
         queue[chat_id].remove(song)
 
 # -------------------------
-# SONG DURATION (Örnek)
+# SONG DURATION
 # -------------------------
 async def get_song_duration(song):
     return song.get("duration", 0)
@@ -104,26 +109,23 @@ async def autoend_off():
 # -------------------------
 async def is_suggestion(chat_id: int) -> bool:
     mode = suggestion.get(chat_id)
-    if not mode:
+    if mode is None:
         user = await suggdb.find_one({"chat_id": chat_id})
-        if not user:
-            suggestion[chat_id] = True
-            return True
-        suggestion[chat_id] = False
-        return False
+        suggestion[chat_id] = bool(not user)
+        return suggestion[chat_id]
     return mode
 
 async def suggestion_on(chat_id: int):
     suggestion[chat_id] = True
     user = await suggdb.find_one({"chat_id": chat_id})
     if user:
-        return await suggdb.delete_one({"chat_id": chat_id})
+        await suggdb.delete_one({"chat_id": chat_id})
 
 async def suggestion_off(chat_id: int):
     suggestion[chat_id] = False
     user = await suggdb.find_one({"chat_id": chat_id})
     if not user:
-        return await suggdb.insert_one({"chat_id": chat_id})
+        await suggdb.insert_one({"chat_id": chat_id})
 
 # -------------------------
 # LOOP
@@ -345,3 +347,39 @@ async def get_video_bitrate(chat_id: int):
         return MediumQualityVideo()
     else:
         return LowQualityVideo()
+
+# -------------------------
+# MAINTENANCE
+# -------------------------
+async def is_maintenance() -> bool:
+    if not maintenance:
+        get = await onoffdb.find_one({"on_off": 1})
+        if not get:
+            maintenance.clear()
+            maintenance.append(2)
+            return True
+        else:
+            maintenance.clear()
+            maintenance.append(1)
+            return False
+    else:
+        if 1 in maintenance:
+            return False
+        else:
+            return True
+
+async def maintenance_off():
+    maintenance.clear()
+    maintenance.append(2)
+    is_off = await onoffdb.find_one({"on_off": 1})
+    if not is_off:
+        return
+    return await onoffdb.delete_one({"on_off": 1})
+
+async def maintenance_on():
+    maintenance.clear()
+    maintenance.append(1)
+    is_on = await onoffdb.find_one({"on_off": 1})
+    if is_on:
+        return
+    return await onoffdb.insert_one({"on_off": 1})
