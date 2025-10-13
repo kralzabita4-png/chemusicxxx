@@ -49,12 +49,7 @@ def stream_markup_timer(_, videoid, chat_id, played, dur):
     bar = get_progress_bar(percentage)  # using for getting the bar
 
     buttons = [
-            [
-            InlineKeyboardButton(
-                text=f"{played} •{bar}• {dur}",
-                callback_data="GetTimer",
-            )
-        ],
+            
         [InlineKeyboardButton(text="DUYURU", url=""),
         ],
         [
@@ -72,7 +67,21 @@ def stream_markup_timer(_, videoid, chat_id, played, dur):
     return buttons
 
 def stream_markup(_, videoid, chat_id):
-    buttons = []
+    buttons = [
+        [InlineKeyboardButton(text="DUYURU", url=""),
+        ],
+        [
+            InlineKeyboardButton(
+                text=_["PL_B_2"],
+                callback_data=f"add_playlist {videoid}",
+            ),
+        
+            InlineKeyboardButton(
+                text=_["PL_B_3"],
+                callback_data=f"PanelMarkup {videoid}|{chat_id}",
+            )
+        ],
+    ]
         
     return buttons
 
