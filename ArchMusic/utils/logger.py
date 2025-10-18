@@ -2,18 +2,12 @@ from config import LOG, LOG_GROUP_ID
 import psutil
 import platform
 import json
-import os
 import time
-import socket
 import logging
-import sqlite3
-import contextlib
 from datetime import datetime
 import pytz
 import locale
-from asyncio import Queue, create_task, sleep
 from typing import Optional, Tuple, Union
-from time import perf_counter
 
 from ArchMusic import app
 from ArchMusic.utils.database import is_on_off
@@ -22,23 +16,16 @@ from ArchMusic.utils.database.memorydatabase import (
 )
 from ArchMusic.utils.database import get_served_chats
 
-
-# Türkçe locale (opsiyonel)
+# 📌 Türkçe locale
 try:
     locale.setlocale(locale.LC_TIME, "tr_TR.UTF-8")
 except Exception:
     pass
 
-
-# ------------------------------------------------
-# 🔧 Global Ayarlar
-# ------------------------------------------------
+# 📌 Başlangıç zamanı (uptime hesaplamak için)
 BOT_START_TIME = time.time()
-LOG_FORMAT = "markdown"
-ALLOWED_USERS = []  # Boş bırakılırsa herkes log üretebilir
-DEVELOPER_ID = 123456789  # Opsiyonel hata bildirimi
-log_queue = Queue()
 
+# 📋 Loglama ayarları
 logging.basicConfig(
     filename="bot_play_logs.txt",
     level=logging.INFO,
@@ -48,10 +35,6 @@ logging.basicConfig(
 # ------------------------------------------------
 # 🔧 Yardımcı Fonksiyonlar
 # ------------------------------------------------
-
-def rotate_log_file(path="bot_play_logs.txt", limit_mb=5):
-    if os.path.exists(path) and os.path.getsize(path) > limit_mb * 1024 * 1024:
-        os.rename(path, f"{path}.{int(time.time())}.bak")
 
 def get_system_status() -> Tuple[str, str, str]:
     try:
@@ -88,12 +71,6 @@ def get_io_status():
     except Exception:
         return "N/A"
 
-def get_server_ip():
-    try:
-        return socket.gethostbyname(socket.gethostname())
-    except Exception:
-        return "Bilinmiyor"
-
 def warn_high_usage(value_str: str) -> str:
     value = float(value_str.replace("%", ""))
     if value > 85:
@@ -114,6 +91,9 @@ async def get_ping() -> str:
     ping = (time.time() - start) * 1000
     return f"{ping:.0f} ms"
 
+def safe_username(user) -> str:
+    return f"@{user.username}" if getattr(user, "username", None) else "Yok"
+
 def get_turkish_datetime() -> str:
     istanbul = pytz.timezone("Europe/Istanbul")
     now = datetime.now(istanbul)
@@ -122,11 +102,7 @@ def get_turkish_datetime() -> str:
     gun = now.strftime("%A")
     return f"📅 {tarih}\n⏰ {saat} ({gun})"
 
-def safe_username(user) -> str:
-    return f"@{user.username}" if getattr(user, "username", None) else "Yok"
-
 def write_log_to_file(log_text: str):
-    rotate_log_file()
     try:
         logging.info(log_text)
     except Exception as e:
@@ -153,57 +129,6 @@ def detect_source(message) -> str:
         return "Bağlantı"
     return "Manuel"
 
-def save_query_history(user_id, query):
-    try:
-        data = json.load(open("query_history.json", "r"))
-    except FileNotFoundError:
-        data = {}
-    data.setdefault(str(user_id), []).append(query)
-    json.dump(data, open("query_history.json", "w"), ensure_ascii=False)
-
-def save_to_sqlite(user_id, action, song):
-    conn = sqlite3.connect("logs.db")
-    cur = conn.cursor()
-    cur.execute("CREATE TABLE IF NOT EXISTS logs (user_id INT, action TEXT, song TEXT, time TEXT)")
-    cur.execute("INSERT INTO logs VALUES (?, ?, ?, ?)", (user_id, action, song, datetime.now().isoformat()))
-    conn.commit()
-    conn.close()
-
-async def report_error(e):
-    try:
-        await app.send_message(DEVELOPER_ID, f"❗Hata: {e}")
-    except Exception:
-        pass
-
-@contextlib.contextmanager
-def measure_time(name="Process"):
-    start = perf_counter()
-    yield
-    print(f"{name} süresi: {perf_counter() - start:.3f}s")
-
-# ------------------------------------------------
-# 🔧 Log Kuyruğu & Otomatik Rapor
-# ------------------------------------------------
-
-async def log_worker():
-    while True:
-        text = await log_queue.get()
-        try:
-            await app.send_message(LOG_GROUP_ID, text, disable_web_page_preview=True)
-        except Exception as e:
-            await report_error(e)
-        log_queue.task_done()
-
-async def daily_status_report():
-    while True:
-        CPU, RAM, DISK = get_system_status()
-        uptime = get_uptime()
-        await app.send_message(
-            LOG_GROUP_ID,
-            f"📅 Günlük Rapor\n🖥️ CPU: {CPU}\n🧠 RAM: {RAM}\n💾 Disk: {DISK}\n⏳ Uptime: {uptime}"
-        )
-        await sleep(86400)
-
 # ------------------------------------------------
 # 🔧 Ana Fonksiyonlar
 # ------------------------------------------------
@@ -213,6 +138,7 @@ async def get_chat_info(chat) -> Tuple[Union[int, str], str]:
         uye_sayisi = await app.get_chat_members_count(chat.id)
     except Exception:
         uye_sayisi = "Bilinmiyor"
+
     if getattr(chat, "username", None):
         chatusername = f"@{chat.username}"
     else:
@@ -220,15 +146,34 @@ async def get_chat_info(chat) -> Tuple[Union[int, str], str]:
             chatusername = await app.export_chat_invite_link(chat.id)
         except Exception:
             chatusername = "Yok / Özel Grup"
+
     return uye_sayisi, chatusername
 
 
 def build_log_text(
-    message, user, chatusername, username, uye_sayisi,
-    CPU, RAM, DISK, toplam_grup, aktif_sesli, aktif_video,
-    uptime, ping, system_info, cpu_temp, net_io, query_count,
-    tarih_saat, action_type="play", music_title=None, music_artist=None
+    message,
+    user,
+    chatusername: str,
+    username: str,
+    uye_sayisi,
+    CPU: str,
+    RAM: str,
+    DISK: str,
+    toplam_grup: int,
+    aktif_sesli: int,
+    aktif_video: int,
+    uptime: str,
+    ping: str,
+    system_info: str,
+    cpu_temp: str,
+    net_io: str,
+    query_count: int,
+    tarih_saat: Optional[str] = None,
+    action_type: str = "play",
+    music_title: Optional[str] = None,
+    music_artist: Optional[str] = None,
 ) -> str:
+
     music_info = ""
     if music_title:
         music_info += f"\n🎶 Şarkı   : {music_title}"
@@ -241,7 +186,12 @@ def build_log_text(
 
     baslik = "📥 Yeni Şarkı Sıraya Eklendi" if action_type == "queue" else "🔊 Yeni Müzik Oynatıldı"
 
-    user_mention = getattr(user, "mention", None) or f"{user.first_name} (id: {user.id})"
+    user_mention = getattr(user, "mention", None)
+    if not user_mention:
+        first = getattr(user, "first_name", "Bilinmiyor")
+        uid = getattr(user, "id", "Bilinmiyor")
+        user_mention = f"{first} (id: {uid})"
+
     chat_title = getattr(message.chat, "title", "Özel Chat")
 
     log = f"""
@@ -256,7 +206,7 @@ def build_log_text(
 
 👤 Kullanıcı: {user_mention}
 ✨ Kullanıcı Adı: {username}
-🔢 Kullanıcı ID: {user.id}
+🔢 Kullanıcı ID: {getattr(user, 'id', 'Bilinmiyor')}
 🔍 Kaynak: {detect_source(message)}
 
 🔎 Sorgu: {sorgu}{music_info}
@@ -268,7 +218,6 @@ def build_log_text(
 ├ 💾 Disk: {DISK} {warn_high_usage(DISK)}
 ├ 🌡️ CPU Sıcaklığı: {cpu_temp}
 ├ 🌐 Ağ Kullanımı : {net_io}
-├ 🌍 Sunucu IP : {get_server_ip()}
 └ ⏳ Uptime: {uptime}
 
 ⚡ Ping: {ping}
@@ -283,50 +232,56 @@ def build_log_text(
 
 
 async def play_logs(
-    message, streamtype=None, music_title=None,
-    music_artist=None, action_type="play"
+    message,
+    streamtype: Optional[str] = None,
+    music_title: Optional[str] = None,
+    music_artist: Optional[str] = None,
+    action_type: str = "play",
 ):
-    if ALLOWED_USERS and message.from_user.id not in ALLOWED_USERS:
-        return
+    chat_id = message.chat.id
+    user = message.from_user
 
-    with measure_time("Log oluşturma"):
-        chat_id = message.chat.id
-        user = message.from_user
-        uye_sayisi, chatusername = await get_chat_info(message.chat)
-        username = safe_username(user)
-        toplam_grup = len(await get_served_chats())
-        aktif_sesli = len(await get_active_chats())
-        aktif_video = len(await get_active_video_chats())
+    uye_sayisi, chatusername = await get_chat_info(message.chat)
+    username = safe_username(user)
 
-        CPU, RAM, DISK = get_system_status()
-        uptime = get_uptime()
-        ping = await get_ping()
-        system_info = get_system_details()
-        cpu_temp = get_cpu_temp()
-        net_io = get_io_status()
-        query_count = increase_query_count()
-        tarih_saat = get_turkish_datetime()
+    toplam_grup = len(await get_served_chats())
+    aktif_sesli = len(await get_active_chats())
+    aktif_video = len(await get_active_video_chats())
 
-        save_query_history(user.id, getattr(message, "text", "Yok"))
-        save_to_sqlite(user.id, action_type, music_title or "Yok")
+    CPU, RAM, DISK = get_system_status()
+    uptime = get_uptime()
+    ping = await get_ping()
+    system_info = get_system_details()
+    cpu_temp = get_cpu_temp()
+    net_io = get_io_status()
+    query_count = increase_query_count()
+    tarih_saat = get_turkish_datetime()
 
-        if await is_on_off(LOG):
-            logger_text = build_log_text(
-                message, user, chatusername, username, uye_sayisi,
-                CPU, RAM, DISK, toplam_grup, aktif_sesli, aktif_video,
-                uptime, ping, system_info, cpu_temp, net_io,
-                query_count, tarih_saat, action_type, music_title, music_artist
-            )
-            logger_text = mask_sensitive_data(logger_text)
-            write_log_to_file(logger_text)
-            if chat_id != LOG_GROUP_ID:
-                await log_queue.put(logger_text)
+    if await is_on_off(LOG):
+        logger_text = build_log_text(
+            message, user, chatusername, username, uye_sayisi,
+            CPU, RAM, DISK, toplam_grup, aktif_sesli, aktif_video,
+            uptime, ping, system_info, cpu_temp, net_io,
+            query_count, tarih_saat, action_type, music_title, music_artist
+        )
 
-# ------------------------------------------------
-# 🔧 Başlangıç
-# ------------------------------------------------
+        logger_text = mask_sensitive_data(logger_text)
+        write_log_to_file(logger_text)
+
+        if chat_id != LOG_GROUP_ID:
+            try:
+                await app.send_message(LOG_GROUP_ID, logger_text, disable_web_page_preview=True)
+            except Exception as e:
+                print(f"Log gönderilemedi: {e}")
+
+            try:
+                current_title = f"🔊 Aktif Ses - {aktif_sesli}"
+                chat_info = await app.get_chat(LOG_GROUP_ID)
+                if getattr(chat_info, "title", None) != current_title:
+                    await app.set_chat_title(LOG_GROUP_ID, current_title)
+            except Exception:
+                pass
+
+
 if __name__ == "__main__":
-    create_task(log_worker())
-    create_task(daily_status_report())
-    print("✅ play_logs modülü (pro sürüm) yüklendi — Gelişmiş loglama, rapor, güvenlik ve performans özellikleri aktif.")
-
+    print("✅ play_logs modülü (v2) yüklendi — Gelişmiş loglama, uptime, ping ve sistem bilgisi eklendi.")
