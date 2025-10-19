@@ -222,7 +222,7 @@ song_11 : "**Yükleme Başladı\n\nYükleme hızı yavaş olabilir. Lütfen bekl
 queue_1 : "→ **Lütfen Bekleyin..** **__Sıra Alınıyor...__** "
 queue_2 : "→ **Sırada Malesef Hiçbir Sey Yok.** "
 queue_3 : "→ <u>**Sıradaki Parçalar:**</u> [**Sıradaki Parçalara Buradan Bakabilirsiniz**]({0})"
-queue_4 : "🎻<b> Sıraya Eklendi **#{0} \n\n<🎼**Parça:** {1}\n🧬 **Süre:** {2}\n👁‍🗨️ **Dinleyici:** {3}"
+queue_4 : "✨🌙❝<b> Sıraya Eklendi 🌙✨\n💠📖 𝘽𝙄𝙇𝙂𝙄: 📖💠\n{0}\n\n⏳🌟 𝙎𝙐𝙍𝙀: 🌟⏳ {2}\n\n👤💫 𝙏𝘼𝙇𝙀𝙋 𝙀𝘿𝙀𝙉: 💫👤 {3}\n"
 queue_5 : "**Sırada Sadece Bir Parça Var**, **Lütfen Biraz Daha Parça Ekleyin.**"
 
 #  BY
