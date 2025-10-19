@@ -29,24 +29,26 @@ loop = asyncio.get_running_loop()
 
 # ===================== SHOW LOADING ANIMASYONU (OPTİMİZE) =====================
 async def show_loading(message: Message):
-    frames = [
-        "⚡🤖 Başlatılıyor…",
-        "🔋💻 Modüller yükleniyor…",
-        "💫🔌 Bağlantılar kuruluyor…",
-        "⚡🤖 Hazır! ✅",
-    ]
+    frames = ["⚡🤖 Başlatılıyor…", "🔋💻 Modüller yükleniyor…", "💫🔌 Bağlantılar kuruluyor…", "⚡🤖 Hazır! ✅"]
     loading = await message.reply_text(frames[0])
     
     for frame in frames[1:]:
-        await asyncio.sleep(0.5)  # Daha hızlı
-        await loading.edit(frame)
+        await asyncio.sleep(0.5)
+        try:
+            if loading.text != frame:
+                await loading.edit(frame)
+        except:
+            pass
 
-    # Minimal pulse animasyonu
     pulse_frames = ["⚡🤖 Hazır! ✅", "💫🔋 Hazır! ✅"]
-    for _ in range(1):  # Tek tekrar
+    for _ in range(1):
         for frame in pulse_frames:
             await asyncio.sleep(0.3)
-            await loading.edit(frame)
+            try:
+                if loading.text != frame:
+                    await loading.edit(frame)
+            except:
+                pass
 
     return loading
 
