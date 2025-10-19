@@ -1,4 +1,5 @@
 from datetime import datetime
+import os
 
 from pyrogram import filters
 from pyrogram.types import Message
@@ -30,9 +31,15 @@ def generate_bar(usage: float, length: int = 20) -> str:
 @language
 async def ping_com(client, message: Message, _):
     try:
+        # Ping görseli: Lokal dosya mı yoksa URL mi kontrol et
+        if os.path.exists(PING_IMG_URL):
+            photo_to_send = PING_IMG_URL
+        else:
+            photo_to_send = PING_IMG_URL  # HTTP URL kabul edilir, Telegram File ID de olabilir
+
         # Kullanıcıya anlık görsel ve mesaj
         response = await message.reply_photo(
-            photo=PING_IMG_URL,
+            photo=photo_to_send,
             caption=_["ping_1"],
         )
 
