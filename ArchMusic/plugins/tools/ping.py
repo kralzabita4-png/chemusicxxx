@@ -72,3 +72,4 @@ async def ping_com(client, message: Message):
 
     except Exception as e:
         await message.reply_text(f"❌ Ping alınırken bir hata oluştu.\nHata: {e}")
+        
