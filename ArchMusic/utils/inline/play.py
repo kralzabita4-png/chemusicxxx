@@ -1,7 +1,5 @@
-# ===============================================
-# 🌌 Kumsal Bots - Parıltılı Müzik Arayüzü
-# Minimal, modern, sade ve güçlü kontrol sistemi
-# ===============================================
+#
+
 
 import math
 from pyrogram.types import InlineKeyboardButton
@@ -40,10 +38,9 @@ def stream_markup_timer(_, videoid, chat_id, played, dur):
         [InlineKeyboardButton(text=progress_bar(played, dur), callback_data="nonclickable")],
         [
             InlineKeyboardButton("⏮", callback_data=f"ADMIN 1|{chat_id}"),
-            InlineKeyboardButton("⏸", callback_data=f"pausevc {chat_id}"),
-            InlineKeyboardButton("▶️", callback_data=f"resumevc {chat_id}"),
+            
             InlineKeyboardButton("⏭", callback_data=f"ADMIN 2|{chat_id}"),
-            InlineKeyboardButton("⏹", callback_data=f"stopvc {chat_id}"),
+            
         ],
         [
             InlineKeyboardButton("💎 Listeye Ekle", callback_data=f"add_playlist {videoid}"),
@@ -54,45 +51,10 @@ def stream_markup_timer(_, videoid, chat_id, played, dur):
 
 
 # ───────────────────────────────
-# 🌀 Telegram stream oynatma
-# ───────────────────────────────
-def telegram_markup_timer(_, chat_id, played, dur, videoid):
-    buttons = [
-        [InlineKeyboardButton("🚀  ᴍᴀᴠɪ ᴅᴜʏᴜʀᴜ 🚀", url="https://t.me/the_team_kumsal")],
-        [InlineKeyboardButton(progress_bar(played, dur), callback_data="nonclickable")],
-        [
-            InlineKeyboardButton("⏮", callback_data=f"ADMIN 1|{chat_id}"),
-            InlineKeyboardButton("⏸", callback_data=f"pausevc {chat_id}"),
-            InlineKeyboardButton("▶️", callback_data=f"resumevc {chat_id}"),
-            InlineKeyboardButton("⏭", callback_data=f"ADMIN 2|{chat_id}"),
-            InlineKeyboardButton("⏹", callback_data=f"stopvc {chat_id}"),
-        ],
-        [
-            InlineKeyboardButton("💎 Listeye Ekle", callback_data=f"add_playlist {videoid}"),
-            InlineKeyboardButton("✨ Kontrol Paneli", callback_data=f"PanelMarkup None|{chat_id}"),
-        ],
-    ]
-    return buttons
 
 
-# ───────────────────────────────
-# 🎛️ Standart kontrol menüsü
-# ───────────────────────────────
-def telegram_markup(_, chat_id):
-    buttons = [
-        [
-            InlineKeyboardButton("⏮", callback_data=f"ADMIN 1|{chat_id}"),
-            InlineKeyboardButton("⏸", callback_data=f"pausevc {chat_id}"),
-            InlineKeyboardButton("▶️", callback_data=f"resumevc {chat_id}"),
-            InlineKeyboardButton("⏭", callback_data=f"ADMIN 2|{chat_id}"),
-            InlineKeyboardButton("⏹", callback_data=f"stopvc {chat_id}"),
-        ],
-        [
-            InlineKeyboardButton("💠 Menüye Dön", callback_data=f"PanelMarkup None|{chat_id}"),
-            InlineKeyboardButton("❌ Kapat", callback_data="close"),
-        ],
-    ]
-    return buttons
+
+
 
 
 # ───────────────────────────────
