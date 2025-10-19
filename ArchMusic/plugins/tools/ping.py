@@ -1,4 +1,4 @@
-from datetime import datetime
+   from datetime import datetime
 
 from pyrogram import filters
 from pyrogram.types import Message
@@ -29,9 +29,7 @@ def generate_bar(usage: float, length: int = 20) -> str:
 @language
 async def ping_com(client, message: Message, _):
     try:
-        # Ping mesajı (sadece metin)
-        response = await message.reply_text(_["ping_1"])
-
+        # Ping mesajı sadece metin ile gönderiliyor
         start_time = datetime.now()
 
         # Bot ve sistem pingleri
@@ -53,7 +51,7 @@ async def ping_com(client, message: Message, _):
 🗄 Disk Kullanımı: `{disk}%`
 ⏳ Uptime: `{uptime}`
 """
-        await response.edit_text(ping_message)
+        await message.reply_text(ping_message)
 
         # Mini çubuk göstergeleri
         cpu_bar = generate_bar(cpu)
@@ -81,4 +79,4 @@ async def ping_com(client, message: Message, _):
 
     except Exception as e:
         await message.reply_text(f"❌ Ping alınırken bir hata oluştu.\nHata: {e}")
-        
+
