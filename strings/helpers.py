@@ -60,25 +60,18 @@ HELP_3 = """<b>💥━━━━━━━━━━━━━━━━━💥</b>
 <b>🔁 /dongu X</b> — <i>Müziği X kez döngüye alır</i>  
 
 <i>💡 Örnek: /ilerisar 15 → 15 saniye ileri</i>
-
- 
-
-"""
-HELP_4 = """🥏<u>**💥OYNATMA KOMUTU
 ▶️ /oynat /play: Müziği oynatır.
 -Örnek: /oynat /play şarkı ismi (Ör: /oynat Gönül Dağı).
 
 🎦 /vplay /voynat: Videoyu oynatır.
 -Örnek: /vplay /vplay video ismi.
-
-"""
-HELP_5= """🥏<u>** ✨Oynatma Listeleri:
-
+ 
 📥 /bul /indir [müzik adı] veya [Youtube linki]: Youtube'dan müzik indirir.
 
 ❤️‍🩹 /playlist: Oynatma listenizi gösterir.
 🆑 /listemisil: Listeden müzik siler.
-📃 /oynat: Oynatma listesi ekranı açar
+📃 /oynat
+
 """
 
 HELP_6=  """🥏<u>**BOT KOMUTLARİ
