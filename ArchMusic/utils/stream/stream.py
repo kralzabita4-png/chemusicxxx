@@ -181,7 +181,8 @@ async def stream(
                     title,
                     f"https://t.me/{app.username}?start=info_{vidid}",
                     duration_min,
-                    user_name
+                    user_name,
+                  {played}  {bar}  {total}
                 ),
             )
             if chat_id in db and db[chat_id]:
@@ -333,7 +334,9 @@ async def stream(
                     title,
                     f"https://t.me/{app.username}?start=info_{vidid}",
                     duration_min,
-                    user_name
+                    user_name,
+                  {played}  {bar}  {total}
+    
                 ),
             )
             if chat_id in db and db[chat_id]:
