@@ -11,15 +11,12 @@ from pyrogram.types import InlineKeyboardMarkup, Message
 from config import BANNED_USERS
 from strings import get_command, get_string, helpers
 from ArchMusic import app
-from ArchMusic.misc import SUDOERS
 from ArchMusic.utils import help_pannel
 from ArchMusic.utils.database import get_lang, is_commanddelete_on
 from ArchMusic.utils.decorators.language import LanguageStart, languageCB
 from ArchMusic.utils.inline.help import help_back_markup, private_help_panel
 
-# Komut sabiti
 HELP_COMMAND = get_command("HELP_COMMAND")
-
 
 # Özel sohbette yardım komutu veya geri dönüş butonu
 @app.on_message(filters.command(HELP_COMMAND) & filters.private & ~BANNED_USERS)
@@ -36,7 +33,7 @@ async def helper_private(client: app, update: Union[types.Message, types.Callbac
         chat_id = update.message.chat.id
         language = await get_lang(chat_id)
         _ = get_string(language)
-        keyboard = help_pannel(_)  # ✅ düzeltildi
+        keyboard = help_pannel(_)
 
         if update.message.photo:
             await update.message.delete()
@@ -55,7 +52,7 @@ async def helper_private(client: app, update: Union[types.Message, types.Callbac
         
         language = await get_lang(chat_id)
         _ = get_string(language)
-        keyboard = help_pannel(_)  # ✅ düzeltildi
+        keyboard = help_pannel(_)
 
         await update.reply_text(_["help_1"], reply_markup=keyboard)
 
@@ -77,7 +74,6 @@ async def helper_cb(client, callback: types.CallbackQuery, _):
     except Exception as e:
         print(f"Callback cevabı hatalı: {e}")
 
-    # Güvenli ayrıştırma
     parts = callback.data.strip().split(None, 1)
     if len(parts) < 2:
         return await callback.answer("Geçersiz yardım isteği!", show_alert=True)
@@ -85,19 +81,10 @@ async def helper_cb(client, callback: types.CallbackQuery, _):
     cb = parts[1]
     keyboard = help_back_markup(_)
 
-    # Sadece sudo kullanıcıları için
-    if cb == "hb4":
-        if callback.from_user.id not in SUDOERS:
-            return await callback.answer("Sadece Sudo Kullanıcıları İçin", show_alert=True)
-        await callback.edit_message_text(helpers.HELP_4, reply_markup=keyboard)
-        return
-
-    # Yardım kategorileri
     help_sections = {
         "hb1": helpers.HELP_1,
         "hb2": helpers.HELP_2,
         "hb3": helpers.HELP_3,
-        "hb4": helpers.HELP_4,
         
     }
 
@@ -105,4 +92,3 @@ async def helper_cb(client, callback: types.CallbackQuery, _):
         await callback.edit_message_text(help_sections[cb], reply_markup=keyboard)
     else:
         await callback.answer("Bilinmeyen yardım bölümü!", show_alert=True)
-        
