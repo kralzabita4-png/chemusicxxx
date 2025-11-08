@@ -6,7 +6,7 @@ from pyrogram.types import InlineKeyboardButton
 # ───────────────────────────────
 def stream_markup(_, videoid, chat_id):
     buttons = [
-        [InlineKeyboardButton("🌌  ᴅᴜʏᴜʀᴜ 🌌", url="https://t.me/Hebunbots")],
+        [InlineKeyboardButton("🌌  ᴅᴜʏᴜʀᴜ 🌌", url="https://t.me/yasamakbuysa")],
         
     ]
     return buttons
