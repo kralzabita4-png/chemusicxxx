@@ -11,8 +11,7 @@ hachoir
 heroku3
 lyricsgenius
 motor
-- ntgcalls==2.0.6
-+ ntgcalls==1.2.2
+ntgcalls==1.2.2
 pillow
 psutil
 py-tgcalls==2.0.6
