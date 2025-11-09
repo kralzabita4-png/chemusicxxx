@@ -11,7 +11,6 @@ hachoir
 heroku3
 lyricsgenius
 motor
-ntgcalls==1.2.3
 pillow
 psutil
 py-tgcalls==2.0.6
@@ -21,9 +20,9 @@ requests
 speedtest-cli
 spotipy
 unidecode
-uvloop
 werkzeug
 yt-dlp
+PyYAML~=6.0.3
+
 https://github.com/KurimuzonAkuma/pyrogram/archive/dev.zip
 https://github.com/KSKOP69/youtube-search-python/archive/ksk.zip
-PyYAML~=6.0.3
